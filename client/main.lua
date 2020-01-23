@@ -32,7 +32,6 @@ AddEventHandler('relisoft_players:drawText',function()
     end
 end)
 
-
 Citizen.CreateThread(function()
     while true do
         Citizen.Wait(0)
@@ -43,7 +42,7 @@ Citizen.CreateThread(function()
                 local ped = GetPlayerPed(v)
                 local cords = GetEntityCoords(ped)
                 if GetDistanceBetweenCoords(cords,currentCoords) < 100 then
-                    ESX.Game.Utils.DrawText3D(cords, GetPlayerName(v), 2)
+                    ESX.Game.Utils.DrawText3D(cords, GetPlayerName(v)..' '..GetPlayerServerId(v), 2)
                 end
             end
         end
