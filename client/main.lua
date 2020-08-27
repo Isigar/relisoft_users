@@ -12,6 +12,7 @@ local Keys = {
 
 ESX = nil
 local draw = false
+local visiblePlayers = {}
 
 Citizen.CreateThread(function()
     while ESX == nil do
@@ -32,17 +33,60 @@ AddEventHandler('relisoft_players:drawText',function()
     end
 end)
 
+function draw3DText(pos, text, options)
+    options = options or { }
+    local color = options.color or {r = 255, g = 255, b = 255, a = 255}
+    local scaleOption = options.size or 0.8
+
+    local camCoords      = GetGameplayCamCoords()
+    local dist           = #(vector3(camCoords.x, camCoords.y, camCoords.z)-vector3(pos.x, pos.y, pos.z))
+    local scale = (scaleOption / dist) * 2
+    local fov   = (1 / GetGameplayCamFov()) * 100
+    local scaleMultiplier = scale * fov
+    SetDrawOrigin(pos.x, pos.y, pos.z, 0);
+    SetTextProportional(0)
+    SetTextScale(0.0 * scaleMultiplier, 0.55 * scaleMultiplier)
+    SetTextColour(color.r,color.g,color.b,color.a)
+    SetTextDropshadow(0, 0, 0, 0, 255)
+    SetTextEdge(2, 0, 0, 0, 150)
+    SetTextDropShadow()
+    SetTextOutline()
+    SetTextEntry("STRING")
+    SetTextCentre(1)
+    AddTextComponentString(text)
+    DrawText(0.0, 0.0)
+    ClearDrawOrigin()
+end
+
+Citizen.CreateThread(function()
+    while true do
+        Citizen.Wait(Config.NearPlayerTime or 500)
+        local ped = PlayerPedId()
+        local coords = GetEntityCoords(ped)
+        local allPlayers = GetActivePlayers()
+        for _, v in pairs(allPlayers) do
+            local targetPed = GetPlayerPed(v)
+            local targetCoords = GetEntityCoords(targetPed)
+            if #(coords-targetCoords) < Config.DrawDistance then
+                table.insert(visiblePlayers,v)
+            end
+        end
+    end
+end)
+
+--Draw thread
 Citizen.CreateThread(function()
     while true do
         Citizen.Wait(0)
         if draw then
             local currentCoords = GetEntityCoords(GetPlayerPed(PlayerId()))
-            local allPlayers = ESX.Game.GetPlayers()
-            for k, v in pairs(allPlayers) do
+            for _, v in pairs(visiblePlayers) do
                 local ped = GetPlayerPed(v)
                 local cords = GetEntityCoords(ped)
-                if GetDistanceBetweenCoords(cords,currentCoords) < 100 then
-                    ESX.Game.Utils.DrawText3D(cords, GetPlayerName(v)..' '..GetPlayerServerId(v), 2)
+                if #(cords-currentCoords) < Config.DrawDistance then
+                    draw3DText(cords, GetPlayerName(v)..' '..GetPlayerServerId(v), {
+                        size = Config.TextSize
+                    })
                 end
             end
         end
