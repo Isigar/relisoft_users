@@ -68,7 +68,7 @@ Citizen.CreateThread(function()
             local targetPed = GetPlayerPed(v)
             local targetCoords = GetEntityCoords(targetPed)
             if #(coords-targetCoords) < Config.DrawDistance then
-                table.insert(visiblePlayers,v)
+                visiblePlayers[v] = v
             end
         end
     end
